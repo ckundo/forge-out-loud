@@ -19,7 +19,9 @@ class CameraViewController: UIViewController {
   @IBOutlet weak var videoPreview: UIView!
   @IBOutlet weak var timeLabel: UILabel!
   @IBOutlet weak var debugImageView: UIImageView!
-
+    
+  var prompted: Bool!
+  var filterTerm: String!
   var videoCapture: VideoCapture!
   var device: MTLDevice!
   var commandQueue: MTLCommandQueue!
@@ -35,6 +37,7 @@ class CameraViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
 
+    prompted = false
     timeLabel.text = ""
 
     device = MTLCreateSystemDefaultDevice()
@@ -91,19 +94,33 @@ class CameraViewController: UIViewController {
       self.fpsCounter.start()
       self.videoCapture.start()
     }
-  }
 
+  }
+    
   override func didReceiveMemoryWarning() {
     super.didReceiveMemoryWarning()
     print(#function)
   }
 
   // MARK: - UI stuff
-
+    
   override func viewWillLayoutSubviews() {
     super.viewWillLayoutSubviews()
     resizePreviewLayer()
-  }
+  
+    if (!self.prompted) {
+        let alertController = UIAlertController(title: "Seek", message: "What are you looking for?", preferredStyle: .alert)
+        let action = UIAlertAction(title: "Go", style: .default, handler: { (alert) in
+            self.filterTerm = alertController.textFields![0].text
+        })
+        alertController.addAction(action)
+        alertController.addTextField(configurationHandler: { (textfield) in
+            textfield.placeholder = "e.g. chair"
+        })
+        self.present(alertController, animated: true, completion: nil)
+        self.prompted = true
+    }
+}
 
   override var preferredStatusBarStyle: UIStatusBarStyle {
     return .lightContent
@@ -151,7 +168,7 @@ class CameraViewController: UIViewController {
       }
 
       self.fpsCounter.frameCompleted()
-      self.timeLabel.text = String(format: "%.1f FPS (latency: %.5f sec)", self.fpsCounter.fps, result.latency)
+//      self.timeLabel.text = String(format: "%.1f FPS (latency: %.5f sec)", self.fpsCounter.fps, result.latency)
     }
   }
 
@@ -182,16 +199,17 @@ class CameraViewController: UIViewController {
         // Show the bounding box.
         let word = labels[prediction.classIndex]
 
-        if word.lowercased().range(of: "chair") != nil {
+        if (self.filterTerm != nil) {
+        if self.filterTerm.range(of: word.lowercased()) != nil {
           let synthesizer = AVSpeechSynthesizer()
             let utterance = AVSpeechUtterance(string: word)
             synthesizer.speak(utterance)
+        }
         }
 
         let label = String(format: "%@ %.1f", labels[prediction.classIndex], prediction.score * 100)
         let color = colors[prediction.classIndex]
         boundingBoxes[i].show(frame: rect, label: label, color: color)
-
       } else {
         boundingBoxes[i].hide()
       }
