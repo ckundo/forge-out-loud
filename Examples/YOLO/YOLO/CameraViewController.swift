@@ -107,8 +107,12 @@ class CameraViewController: UIViewController {
   override func viewWillLayoutSubviews() {
     super.viewWillLayoutSubviews()
     resizePreviewLayer()
-  
     if (!self.prompted) {
+        filterPrompt()
+    }
+}
+    
+    func filterPrompt() {
         let alertController = UIAlertController(title: "Seek", message: "What are you looking for?", preferredStyle: .alert)
         let action = UIAlertAction(title: "Go", style: .default, handler: { (alert) in
             self.filterTerm = alertController.textFields![0].text
@@ -120,7 +124,6 @@ class CameraViewController: UIViewController {
         self.present(alertController, animated: true, completion: nil)
         self.prompted = true
     }
-}
 
   override var preferredStatusBarStyle: UIStatusBarStyle {
     return .lightContent
@@ -200,10 +203,11 @@ class CameraViewController: UIViewController {
         let word = labels[prediction.classIndex]
 
         if (self.filterTerm != nil) {
-        if self.filterTerm.range(of: word.lowercased()) != nil {
+        if self.filterTerm.lowercased().range(of: word.lowercased()) != nil {
           let synthesizer = AVSpeechSynthesizer()
             let utterance = AVSpeechUtterance(string: word)
             synthesizer.speak(utterance)
+            filterPrompt()
         }
         }
 
