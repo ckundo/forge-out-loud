@@ -180,6 +180,14 @@ class CameraViewController: UIViewController {
         rect.size.height *= scaleY
 
         // Show the bounding box.
+        let word = labels[prediction.classIndex]
+
+        if word.lowercased().range(of: "chair") != nil {
+          let synthesizer = AVSpeechSynthesizer()
+            let utterance = AVSpeechUtterance(string: word)
+            synthesizer.speak(utterance)
+        }
+
         let label = String(format: "%@ %.1f", labels[prediction.classIndex], prediction.score * 100)
         let color = colors[prediction.classIndex]
         boundingBoxes[i].show(frame: rect, label: label, color: color)

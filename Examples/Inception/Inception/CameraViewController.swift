@@ -3,6 +3,7 @@ import Metal
 import MetalPerformanceShaders
 import CoreMedia
 import Forge
+import AVFoundation
 
 let MaxBuffersInFlight = 3   // use triple buffering
 
@@ -141,9 +142,20 @@ class CameraViewController: UIViewController {
 
   private func show(predictions: [Inception3.Prediction]) {
     var s: [String] = []
+
+
     for pred in predictions {
+
+      let word = pred.label
+      if word.lowercased().range(of: "chair") != nil {
+        let synthesizer = AVSpeechSynthesizer()
+          let utterance = AVSpeechUtterance(string: word)
+          synthesizer.speak(utterance)
+      }
+
       s.append(String(format: "%@ %2.1f%%", pred.label, pred.probability * 100))
     }
+
     predictionLabel.text = s.joined(separator: "\n\n")
   }
 }
