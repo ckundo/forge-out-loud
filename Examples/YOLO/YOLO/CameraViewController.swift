@@ -20,18 +20,16 @@ class CameraViewController: UIViewController {
   @IBOutlet weak var timeLabel: UILabel!
   @IBOutlet weak var debugImageView: UIImageView!
 
-  var prompted: Bool!
-  var filterTerm: String!
   var videoCapture: VideoCapture!
   var device: MTLDevice!
   var commandQueue: MTLCommandQueue!
   var runner: Runner!
   var network: YOLO!
-  var feedbackGenerator: UISelectionFeedbackGenerator!
-
+  var nearFeedbackGenerator: UINotificationFeedbackGenerator!
+  var farFeedbackGenerator: UINotificationFeedbackGenerator!
+  var synthesizer: AVSpeechSynthesizer!
 
   var startupGroup = DispatchGroup()
-
   var boundingBoxes = [BoundingBox]()
   var colors: [UIColor] = []
   let fpsCounter = FPSCounter()
@@ -39,7 +37,12 @@ class CameraViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    prompted = false
+    nearFeedbackGenerator = UINotificationFeedbackGenerator()
+    nearFeedbackGenerator?.prepare()
+    farFeedbackGenerator = UINotificationFeedbackGenerator()
+    farFeedbackGenerator?.prepare()
+    synthesizer = AVSpeechSynthesizer()
+
     timeLabel.text = ""
 
     device = MTLCreateSystemDefaultDevice()
@@ -109,22 +112,6 @@ class CameraViewController: UIViewController {
   override func viewWillLayoutSubviews() {
     super.viewWillLayoutSubviews()
     resizePreviewLayer()
-    if (!self.prompted) {
-      filterPrompt()
-    }
-  }
-
-  func filterPrompt() {
-    let alertController = UIAlertController(title: "Seek", message: "What are you looking for?", preferredStyle: .alert)
-    let action = UIAlertAction(title: "Go", style: .default, handler: { (alert) in
-      self.filterTerm = alertController.textFields![0].text
-                               })
-    alertController.addAction(action)
-    alertController.addTextField(configurationHandler: { (textfield) in
-      textfield.placeholder = "e.g. chair"
-                                 })
-    self.present(alertController, animated: true, completion: nil)
-    self.prompted = true
   }
 
   override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -173,7 +160,6 @@ class CameraViewController: UIViewController {
       }
 
       self.fpsCounter.frameCompleted()
-      //      self.timeLabel.text = String(format: "%.1f FPS (latency: %.5f sec)", self.fpsCounter.fps, result.latency)
     }
   }
 
@@ -204,9 +190,18 @@ class CameraViewController: UIViewController {
         // Show the bounding box.
         let word = labels[prediction.classIndex]
 
-        if (self.filterTerm != nil) {
-          if self.filterTerm.lowercased().range(of: word.lowercased()) != nil {
-            feedbackGenerator = UISelectionFeedbackGenerator()
+        let distance = 60/(458/rect.height)
+
+        if "chair".range(of: word.lowercased()) != nil {
+          if (distance < 48) {
+            let utterance = AVSpeechUtterance(string: String(format: "%f", distance))
+            synthesizer.speak(utterance)
+
+            nearFeedbackGenerator?.notificationOccurred(.success)
+            nearFeedbackGenerator?.prepare()
+          } else if (distance > 48 && distance < 120) {
+            farFeedbackGenerator?.notificationOccurred(.warning)
+            farFeedbackGenerator?.prepare()
           }
         }
 
