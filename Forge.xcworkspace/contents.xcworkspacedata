@@ -2,21 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:Forge/Forge.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:ForgeTests/ForgeTests.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:Examples/MNIST/MNIST.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:Examples/Inception/Inception.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:Forge/Forge/../../Examples/MobileNets/MobileNets.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:Examples/YOLO/YOLO.xcodeproj">
+      location = "group:/Users/cundiff/Development/forge-out-loud/Examples/YOLO/Outloud.xcodeproj">
    </FileRef>
 </Workspace>

@@ -19,7 +19,7 @@ class CameraViewController: UIViewController {
   @IBOutlet weak var videoPreview: UIView!
   @IBOutlet weak var timeLabel: UILabel!
   @IBOutlet weak var debugImageView: UIImageView!
-
+    
   var prompted: Bool!
   var filterTerm: String!
   var videoCapture: VideoCapture!
@@ -27,8 +27,6 @@ class CameraViewController: UIViewController {
   var commandQueue: MTLCommandQueue!
   var runner: Runner!
   var network: YOLO!
-  var feedbackGenerator: UISelectionFeedbackGenerator!
-
 
   var startupGroup = DispatchGroup()
 
@@ -98,34 +96,34 @@ class CameraViewController: UIViewController {
     }
 
   }
-
+    
   override func didReceiveMemoryWarning() {
     super.didReceiveMemoryWarning()
     print(#function)
   }
 
   // MARK: - UI stuff
-
+    
   override func viewWillLayoutSubviews() {
     super.viewWillLayoutSubviews()
     resizePreviewLayer()
     if (!self.prompted) {
-      filterPrompt()
+        filterPrompt()
     }
-  }
-
-  func filterPrompt() {
-    let alertController = UIAlertController(title: "Seek", message: "What are you looking for?", preferredStyle: .alert)
-    let action = UIAlertAction(title: "Go", style: .default, handler: { (alert) in
-      self.filterTerm = alertController.textFields![0].text
-                               })
-    alertController.addAction(action)
-    alertController.addTextField(configurationHandler: { (textfield) in
-      textfield.placeholder = "e.g. chair"
-                                 })
-    self.present(alertController, animated: true, completion: nil)
-    self.prompted = true
-  }
+}
+    
+    func filterPrompt() {
+        let alertController = UIAlertController(title: "Seek", message: "What are you looking for?", preferredStyle: .alert)
+        let action = UIAlertAction(title: "Go", style: .default, handler: { (alert) in
+            self.filterTerm = alertController.textFields![0].text
+        })
+        alertController.addAction(action)
+        alertController.addTextField(configurationHandler: { (textfield) in
+            textfield.placeholder = "e.g. chair"
+        })
+        self.present(alertController, animated: true, completion: nil)
+        self.prompted = true
+    }
 
   override var preferredStatusBarStyle: UIStatusBarStyle {
     return .lightContent
@@ -173,7 +171,7 @@ class CameraViewController: UIViewController {
       }
 
       self.fpsCounter.frameCompleted()
-      //      self.timeLabel.text = String(format: "%.1f FPS (latency: %.5f sec)", self.fpsCounter.fps, result.latency)
+//      self.timeLabel.text = String(format: "%.1f FPS (latency: %.5f sec)", self.fpsCounter.fps, result.latency)
     }
   }
 
@@ -205,9 +203,12 @@ class CameraViewController: UIViewController {
         let word = labels[prediction.classIndex]
 
         if (self.filterTerm != nil) {
-          if self.filterTerm.lowercased().range(of: word.lowercased()) != nil {
-            feedbackGenerator = UISelectionFeedbackGenerator()
-          }
+        if self.filterTerm.lowercased().range(of: word.lowercased()) != nil {
+          let synthesizer = AVSpeechSynthesizer()
+            let utterance = AVSpeechUtterance(string: word)
+            synthesizer.speak(utterance)
+            filterPrompt()
+        }
         }
 
         let label = String(format: "%@ %.1f", labels[prediction.classIndex], prediction.score * 100)
